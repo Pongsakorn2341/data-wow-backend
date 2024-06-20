@@ -21,6 +21,9 @@ export class CommentService {
       where: {
         blog_id: blogId,
       },
+      include: {
+        User: true,
+      },
       orderBy: {
         created_at: 'desc',
       },

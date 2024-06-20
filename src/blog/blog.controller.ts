@@ -37,6 +37,7 @@ export class BlogController {
   @Get()
   @IgnoreAuth()
   findAll(@Query() dto: FindBlogDto) {
+    console.log('🚀 ~ BlogController ~ findAll ~ dto:', dto);
     return this.blogService.findAll(dto);
   }
 
