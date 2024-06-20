@@ -15,8 +15,14 @@ import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { FindBlogDto } from './dto/find-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
-@Controller('blog')
+@Controller({
+  version: '1',
+  path: 'blog',
+})
+@ApiBearerAuth()
+@ApiTags('Blog')
 export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 

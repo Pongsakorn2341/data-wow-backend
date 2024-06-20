@@ -1,5 +1,5 @@
-import { PrismaService } from 'src/prisma/prisma.service';
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 
@@ -16,8 +16,9 @@ export class CommentService {
     return result;
   }
 
-  findAll() {
-    return `This action returns all comment`;
+  async findAll() {
+    const comments = await this.prismaService.comment.findMany();
+    return comments;
   }
 
   private async findOne(userId: string, commentId: string) {
@@ -39,7 +40,9 @@ export class CommentService {
       where: {
         id: commentData.id,
       },
-      data: updateCommentDto,
+      data: {
+        detail: updateCommentDto.detail,
+      },
     });
     return result;
   }

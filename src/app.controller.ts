@@ -1,7 +1,9 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
+import { IgnoreAuth } from './common/decorators/auth.decorator';
 
 @Controller()
+@IgnoreAuth()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 

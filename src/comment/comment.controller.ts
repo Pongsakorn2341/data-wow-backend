@@ -14,8 +14,15 @@ import {
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { IgnoreAuth } from 'src/common/decorators/auth.decorator';
 
-@Controller('comment')
+@Controller({
+  version: '1',
+  path: 'comment',
+})
+@ApiBearerAuth()
+@ApiTags('Comment')
 export class CommentController {
   constructor(private readonly commentService: CommentService) {}
 
@@ -28,6 +35,7 @@ export class CommentController {
   }
 
   @Get()
+  @IgnoreAuth()
   findAll() {
     return this.commentService.findAll();
   }
