@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
 import { FindBlogDto } from './dto/find-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class BlogService {
@@ -19,7 +20,21 @@ export class BlogService {
   }
 
   async findAll(dto: FindBlogDto) {
+    console.log('🚀 ~ BlogService ~ findAll ~ dto:', dto);
+    const blogWhereCause: Prisma.BlogWhereInput = {};
+    if (dto.title) {
+      blogWhereCause.title = {
+        contains: dto.title,
+      };
+    }
+    if (dto.category) {
+      blogWhereCause.category = {
+        equals: dto.category,
+      };
+    }
+
     const blogs = await this.prismaService.blog.findMany({
+      where: blogWhereCause,
       include: {
         User: true,
         _count: {
