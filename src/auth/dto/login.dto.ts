@@ -5,16 +5,11 @@ export class LoginDto {
   @ApiProperty({
     required: true,
     type: String,
-    default: 'meepanda2341@gmail.com',
+    default: 'tottee',
   })
   @IsEmail()
   @IsNotEmpty()
-  email: string;
-
-  @ApiProperty({ required: true, type: String, default: '123123' })
-  @IsString()
-  @IsNotEmpty()
-  password: string;
+  username: string;
 
   @ApiProperty({ required: false, type: Boolean, default: false })
   @IsBoolean()

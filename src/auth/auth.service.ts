@@ -1,19 +1,10 @@
-import {
-  HttpException,
-  HttpStatus,
-  Injectable,
-  Logger,
-  NotFoundException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService, JwtSignOptions } from '@nestjs/jwt';
-import * as bcrypt from 'bcryptjs';
 import * as moment from 'moment';
 import { EnvConfigProps } from 'src/common/config/env.config';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 @Injectable()
 export class AuthService {
   constructor(
@@ -28,21 +19,22 @@ export class AuthService {
   private readonly logger = new Logger(AuthService.name);
 
   async signIn(signInDto: LoginDto) {
-    const userData = await this.prismaService.user.findUnique({
+    let userData = await this.prismaService.user.findUnique({
       where: {
-        email: signInDto.email,
+        username: signInDto.username,
       },
     });
     this.logger.debug(
       `Sign in user data : ${JSON.stringify(userData, null, 2)}`,
       'signIn',
     );
-    if (!userData) throw new NotFoundException();
-    const isMatch = await bcrypt.compare(signInDto.password, userData.password);
-    if (!isMatch) {
-      throw new UnauthorizedException();
+    if (!userData) {
+      userData = await this.prismaService.user.create({
+        data: {
+          username: signInDto.username,
+        },
+      });
     }
-
     if (!userData.is_active) {
       throw new HttpException(
         `User is not active or unavailable.`,
@@ -56,8 +48,7 @@ export class AuthService {
     } as JwtSignOptions;
     const payload = {
       id: userData.id,
-      name: userData.name,
-      email: userData.email,
+      username: userData.username,
       image: userData.profile_image,
       created_at: userData.created_at,
       role: userData.role,
@@ -73,36 +64,5 @@ export class AuthService {
       user: payload,
       expires_at: expiresAt,
     };
-  }
-
-  async register(registerDto: RegisterDto) {
-    const isExist = await this.prismaService.user.findFirst({
-      where: {
-        email: registerDto.email,
-      },
-    });
-    if (isExist) {
-      throw new HttpException(
-        `User record is already exists.`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const hash = await bcrypt.hash(registerDto.password, 10);
-    const userData = await this.prismaService.user.create({
-      data: {
-        email: registerDto.email,
-        name: registerDto.name,
-        password: hash,
-      },
-      select: {
-        id: true,
-        is_active: true,
-        email: true,
-        name: true,
-      },
-    });
-
-    return { status: true, userData };
   }
 }
