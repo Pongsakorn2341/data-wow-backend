@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
@@ -68,10 +68,9 @@ export class BlogService {
     return blogs;
   }
 
-  async findOne(userId: string, id: string) {
+  async findOne(id: string) {
     const blog = await this.prismaService.blog.findUnique({
       where: {
-        created_by: userId,
         id: id,
       },
       include: {
@@ -85,13 +84,21 @@ export class BlogService {
       },
     });
     if (!blog) {
-      throw new Error(`Blog is not found`);
+      throw new HttpException(`Blog is not found`, HttpStatus.BAD_REQUEST);
     }
     return blog;
   }
 
   async update(userId: string, id: string, updateBlogDto: UpdateBlogDto) {
-    const data = await this.findOne(userId, id);
+    const data = await this.prismaService.blog.findUnique({
+      where: {
+        created_by: userId,
+        id: id,
+      },
+    });
+    if (!data) {
+      throw new HttpException(`Blog is not found`, HttpStatus.BAD_REQUEST);
+    }
     const updated = await this.prismaService.blog.update({
       where: {
         id: data.id,
@@ -102,7 +109,15 @@ export class BlogService {
   }
 
   async remove(userId: string, id: string) {
-    await this.findOne(userId, id);
+    const _data = await this.prismaService.blog.findUnique({
+      where: {
+        created_by: userId,
+        id: id,
+      },
+    });
+    if (!_data) {
+      throw new HttpException(`Blog is not found`, HttpStatus.BAD_REQUEST);
+    }
     const deltedData = await this.prismaService.blog.delete({
       where: {
         id: id,

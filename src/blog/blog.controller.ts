@@ -37,7 +37,6 @@ export class BlogController {
   @Get()
   @IgnoreAuth()
   findAll(@Query() dto: FindBlogDto) {
-    console.log('🚀 ~ BlogController ~ findAll ~ dto:', dto);
     return this.blogService.findAll(dto);
   }
 
@@ -47,8 +46,9 @@ export class BlogController {
   }
 
   @Get(':id')
-  findOne(@CurrentUser() userData: IUserJwt, @Param('id') id: string) {
-    return this.blogService.findOne(userData.id, id);
+  @IgnoreAuth()
+  findOne(@Param('id') id: string) {
+    return this.blogService.findOne(id);
   }
 
   @Patch(':id')
