@@ -60,6 +60,7 @@ export class BlogService {
             Comment: true,
           },
         },
+        User: true,
       },
       orderBy: {
         created_at: 'desc',
