@@ -21,6 +21,9 @@ export class CommentService {
       where: {
         blog_id: blogId,
       },
+      orderBy: {
+        created_at: 'desc',
+      },
     });
     return comments;
   }

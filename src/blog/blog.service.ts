@@ -1,4 +1,3 @@
-import { Comment } from './../comment/entities/comment.entity';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
@@ -29,6 +28,9 @@ export class BlogService {
           },
         },
       },
+      orderBy: {
+        created_at: 'desc',
+      },
     });
     return blogs;
   }
@@ -44,6 +46,9 @@ export class BlogService {
             Comment: true,
           },
         },
+      },
+      orderBy: {
+        created_at: 'desc',
       },
     });
     return blogs;
