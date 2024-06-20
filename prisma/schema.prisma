@@ -53,6 +53,7 @@ model Comment {
   id String @id @default(uuid())
 
   blog_id    String
+  detail     String
   created_by String
 
   created_at DateTime @default(now())
