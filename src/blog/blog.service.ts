@@ -1,3 +1,4 @@
+import { Comment } from './../comment/entities/comment.entity';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
@@ -19,7 +20,16 @@ export class BlogService {
   }
 
   async findAll(dto: FindBlogDto) {
-    const blogs = await this.prismaService.blog.findMany();
+    const blogs = await this.prismaService.blog.findMany({
+      include: {
+        User: true,
+        _count: {
+          select: {
+            Comment: true,
+          },
+        },
+      },
+    });
     return blogs;
   }
 
@@ -51,6 +61,8 @@ export class BlogService {
             Comment: true,
           },
         },
+        User: true,
+        Comment: true,
       },
     });
     if (!blog) {

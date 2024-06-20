@@ -6,6 +6,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import {
   CurrentUser,
@@ -36,8 +37,8 @@ export class CommentController {
 
   @Get()
   @IgnoreAuth()
-  findAll() {
-    return this.commentService.findAll();
+  findAll(@Query('blog_id') blogId: string) {
+    return this.commentService.findAll(blogId);
   }
 
   @Patch(':id')

@@ -16,8 +16,12 @@ export class CommentService {
     return result;
   }
 
-  async findAll() {
-    const comments = await this.prismaService.comment.findMany();
+  async findAll(blogId: string) {
+    const comments = await this.prismaService.comment.findMany({
+      where: {
+        blog_id: blogId,
+      },
+    });
     return comments;
   }
 

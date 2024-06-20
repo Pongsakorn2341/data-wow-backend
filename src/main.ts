@@ -9,7 +9,9 @@ const prefix = 'api';
 const swaggerDocument = `api-documents`;
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: true,
+  });
 
   const port = process.env.PORT ?? 3456;
 
