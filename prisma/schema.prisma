@@ -23,9 +23,40 @@ model User {
 
   is_active Boolean @default(true)
 
-  created_at DateTime @default(now())
-  updated_at DateTime @updatedAt
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  Blog       Blog[]
+  Comment    Comment[]
 
   @@index([email, is_active])
   @@map("user")
+}
+
+model Blog {
+  id String @id @default(uuid())
+
+  created_by String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  User    User      @relation(fields: [created_by], references: [id])
+  Comment Comment[]
+
+  @@map("blog")
+}
+
+model Comment {
+  id String @id @default(uuid())
+
+  blog_id    String
+  created_by String
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  Blog Blog @relation(fields: [blog_id], references: [id])
+  User User @relation(fields: [created_by], references: [id])
+
+  @@map("comment")
 }
