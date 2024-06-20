@@ -33,7 +33,10 @@ model User {
 }
 
 model Blog {
-  id String @id @default(uuid())
+  id       String @id @default(uuid())
+  title    String
+  detail   String
+  category String
 
   created_by String
 
