@@ -72,6 +72,16 @@ $ pnpm start:dev
 $ pnpm start:prod
 ```
 
+## Testing the app
+
+```bash
+
+# Testing and view coverage result
+$ pnpm test
+
+```
+
+
 
 ## Contact
 
