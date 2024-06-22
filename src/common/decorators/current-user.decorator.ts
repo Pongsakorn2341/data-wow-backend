@@ -8,13 +8,11 @@ import { EUserRole } from '@prisma/client';
 
 export type IUserJwt = {
   id: string;
-  email: string;
+  username: string;
   created_at: string;
   role: EUserRole;
   iat: number;
   exp: number;
-  instance_id: string;
-  instance_url: string;
 };
 
 export const CurrentUser = createParamDecorator(

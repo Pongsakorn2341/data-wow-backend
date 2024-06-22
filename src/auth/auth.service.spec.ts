@@ -1,17 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { JwtService } from '@nestjs/jwt';
+import { HttpException, HttpStatus } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
+import * as moment from 'moment';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-import * as bcrypt from 'bcryptjs';
-import {
-  NotFoundException,
-  UnauthorizedException,
-  HttpException,
-  HttpStatus,
-} from '@nestjs/common';
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -28,12 +22,8 @@ describe('AuthService', () => {
           useValue: {
             user: {
               findUnique: jest.fn(),
-              findFirst: jest.fn(),
               create: jest.fn(),
             },
-            $transaction: jest.fn((callback) =>
-              callback({ user: { create: jest.fn() } }),
-            ),
           },
         },
         {
@@ -57,131 +47,145 @@ describe('AuthService', () => {
     configService = module.get<ConfigService>(ConfigService);
   });
 
+  it('should be defined', () => {
+    expect(service).toBeDefined();
+  });
+
   describe('signIn', () => {
-    it('should throw NotFoundException if user is not found', async () => {
-      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(null);
-
-      const signInDto: LoginDto = {
-        email: 'test@test.com',
-        password: 'test',
+    it('should return an access token and user data when user exists and is active', async () => {
+      const loginDto: LoginDto = {
+        username: 'testUser',
         is_remember_me: false,
       };
-      await expect(service.signIn(signInDto)).rejects.toThrow(
-        NotFoundException,
+      const userData = {
+        id: 'userId',
+        username: 'testUser',
+        profile_image: 'testImage',
+        created_at: new Date(),
+        role: 'user',
+        is_active: true,
+      };
+      const token = 'testToken';
+      const expiresIn = '6h';
+      // const expiresAt = moment().add(6, 'hours').toDate();
+
+      (
+        jest.spyOn(prismaService.user, 'findUnique') as jest.Mock
+      ).mockResolvedValue(userData);
+      (jest.spyOn(jwtService, 'sign') as jest.Mock).mockResolvedValue(token);
+
+      const result = await service.signIn(loginDto);
+
+      expect(result).toEqual({
+        access_token: token,
+        user: {
+          id: userData.id,
+          username: userData.username,
+          image: userData.profile_image,
+          created_at: userData.created_at,
+          role: userData.role,
+        },
+        expires_at: result.expires_at,
+      });
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { username: loginDto.username },
+      });
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        {
+          id: userData.id,
+          username: userData.username,
+          image: userData.profile_image,
+          created_at: userData.created_at,
+          role: userData.role,
+        },
+        {
+          secret: 'testSecret',
+          expiresIn: expiresIn,
+        },
       );
     });
 
-    it('should throw UnauthorizedException if password is incorrect', async () => {
-      const user = { email: 'test@test.com', password: 'hashedPassword' };
-      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(false);
-
-      const signInDto: LoginDto = {
-        email: 'test@test.com',
-        password: 'test',
-        is_remember_me: false,
+    it('should create a new user if user does not exist and return an access token and user data', async () => {
+      const loginDto: LoginDto = { username: 'newUser', is_remember_me: true };
+      const newUser = {
+        id: 'newUserId',
+        username: 'newUser',
+        profile_image: 'newImage',
+        created_at: new Date(),
+        role: 'user',
+        is_active: true,
       };
-      await expect(service.signIn(signInDto)).rejects.toThrow(
-        UnauthorizedException,
+      const token = 'newTestToken';
+      const expiresIn = '1w';
+      const expiresAt = moment().add(1, 'week').toDate();
+
+      jest.spyOn(prismaService.user, 'findUnique').mockResolvedValue(null);
+      (jest.spyOn(prismaService.user, 'create') as jest.Mock).mockResolvedValue(
+        newUser,
+      );
+      (jest.spyOn(jwtService, 'sign') as jest.Mock).mockResolvedValue(token);
+
+      const result = await service.signIn(loginDto);
+
+      expect(result).toEqual({
+        access_token: token,
+        user: {
+          id: newUser.id,
+          username: newUser.username,
+          image: newUser.profile_image,
+          created_at: newUser.created_at,
+          role: newUser.role,
+        },
+        expires_at: result.expires_at,
+      });
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { username: loginDto.username },
+      });
+      expect(prismaService.user.create).toHaveBeenCalledWith({
+        data: { username: loginDto.username },
+      });
+      expect(jwtService.sign).toHaveBeenCalledWith(
+        {
+          id: newUser.id,
+          username: newUser.username,
+          image: newUser.profile_image,
+          created_at: newUser.created_at,
+          role: newUser.role,
+        },
+        {
+          secret: 'testSecret',
+          expiresIn: expiresIn,
+        },
       );
     });
 
-    it('should throw HttpException if user is not active', async () => {
-      const user = {
-        email: 'test@test.com',
-        password: 'hashedPassword',
+    it('should throw an error if user is not active', async () => {
+      const loginDto: LoginDto = {
+        username: 'inactiveUser',
+        is_remember_me: false,
+      };
+      const inactiveUser = {
+        id: 'inactiveUserId',
+        username: 'inactiveUser',
+        profile_image: 'inactiveImage',
+        created_at: new Date(),
+        role: 'user',
         is_active: false,
       };
-      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
 
-      const signInDto: LoginDto = {
-        email: 'test@test.com',
-        password: 'test',
-        is_remember_me: false,
-      };
-      await expect(service.signIn(signInDto)).rejects.toThrow(
+      (
+        jest.spyOn(prismaService.user, 'findUnique') as jest.Mock
+      ).mockResolvedValue(inactiveUser);
+
+      await expect(service.signIn(loginDto)).rejects.toThrow(
         new HttpException(
-          'User is not active or unavailable.',
+          `User is not active or unavailable.`,
           HttpStatus.FORBIDDEN,
         ),
       );
-    });
-
-    it('should return access token and user data if credentials are valid', async () => {
-      const user = {
-        id: 1,
-        email: 'test@test.com',
-        password: 'hashedPassword',
-        is_active: true,
-        name: 'Test',
-        profile_image: '',
-        created_at: new Date(),
-        role: 'user',
-      };
-      (prismaService.user.findUnique as jest.Mock).mockResolvedValue(user);
-      jest.spyOn(bcrypt, 'compare').mockResolvedValue(true);
-      (jwtService.sign as jest.Mock).mockReturnValue('accessToken');
-
-      const signInDto: LoginDto = {
-        email: 'test@test.com',
-        password: 'test',
-        is_remember_me: false,
-      };
-      const result = await service.signIn(signInDto);
-
-      expect(result).toEqual({
-        access_token: 'accessToken',
-        user: {
-          id: 1,
-          name: 'Test',
-          email: 'test@test.com',
-          image: '',
-          created_at: user.created_at,
-          role: 'user',
-        },
-        expires_at: expect.any(Date),
+      expect(prismaService.user.findUnique).toHaveBeenCalledWith({
+        where: { username: loginDto.username },
       });
-    });
-  });
-
-  describe('register', () => {
-    it('should throw HttpException if user already exists', async () => {
-      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(true);
-
-      const registerDto: RegisterDto = {
-        email: 'test@test.com',
-        password: 'test',
-        name: 'Test',
-      };
-      await expect(service.register(registerDto)).rejects.toThrow(
-        new HttpException(
-          'User record is already exists.',
-          HttpStatus.BAD_REQUEST,
-        ),
-      );
-    });
-
-    it('should create a new user and return user data', async () => {
-      (prismaService.user.findFirst as jest.Mock).mockResolvedValue(false);
-      const createdUser = {
-        id: 1,
-        email: 'test@test.com',
-        is_active: true,
-        name: 'Test',
-      };
-      (prismaService.user.create as jest.Mock).mockResolvedValue(createdUser);
-
-      jest.spyOn(bcrypt, 'hash').mockResolvedValue('hashedPassword');
-
-      const registerDto: RegisterDto = {
-        email: 'test@test.com',
-        password: 'test',
-        name: 'Test',
-      };
-      const result = await service.register(registerDto);
-
-      expect(result).toEqual({ status: true, userData: createdUser });
     });
   });
 });
