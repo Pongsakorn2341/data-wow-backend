@@ -9,7 +9,6 @@
 [circleci-url]: https://circleci.com/gh/nestjs/nest
 
 
-
   <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
 
 
@@ -33,8 +32,21 @@ Make sure you have installed all of the following prerequisites on your developm
 ## Installation
 
 ```bash
+
+# Install the dependencies
 $ pnpm install
+
+# startup database
+$ docker compose up -d
+
+# Push the schema database
+$ npx prisma db push
+
+# Generate type schema
+$ npx prisma db generate
+
 ```
+
 
 
 ## Setup
@@ -54,7 +66,7 @@ JWT_SECRET=tottee
 
 # * DATABASE URL
 # postgresql://{database_username}:{database_password}@db:5432/{database_name}
-DATABASE_URL=
+DATABASE_URL="postgresql://tottee-user:tottee-password@localhost:5432/develop?schema=public"
 ```
 
 
