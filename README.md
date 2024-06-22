@@ -29,8 +29,6 @@ Make sure you have installed all of the following prerequisites on your developm
     │   ├────── .env                         # Your Frontend environments
     │   ├── data-wow-backend         # clone and installation backend
     │   ├────── .env                         # Your Backend environments
-    │   └── docker-compose.yml          # docker file for start web application
-
 
 ## Installation
 
