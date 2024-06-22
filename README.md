@@ -18,6 +18,7 @@ Make sure you have installed all of the following prerequisites on your developm
 * Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager. If you encounter any problems, you can also use this [GitHub Gist](https://gist.github.com/isaacs/579814) to install Node.js.
 * Node.js 20.* and above
 * Pnpm - [Download & Install pnpm](https://pnpm.io/installation). Pnpm package manager.
+* Docker - [Download & Install docker](https://docs.docker.com/engine/install/). Docker Engine.
 
 ### A typical top-level directory layout
 
