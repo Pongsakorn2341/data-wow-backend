@@ -7,10 +7,12 @@ log() {
 set -e
 
 log "Build Process..."
-npm run build
+pnpm build
+
+pnpm prune --prod
 
 sleep 10
-yarn prisma:push
+npx prisma db push
 
 log "Starting development environment..."
-yarn start
+pnpm start
