@@ -43,6 +43,7 @@ $ pnpm install
 
 > Use your own env or retrive it from ".env.example"
 
+* * create the file .env
 ```
 NODE_ENV=development
 PORT=4444
